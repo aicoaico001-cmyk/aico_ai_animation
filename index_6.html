@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AICO | AI Anime Director & Cinematographer</title>
+<meta name="description" content="AICO — AIアニメーション監督・映像作家。オリジナルIPの脚本・絵コンテ・演出を手がける制作ポートフォリオ。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;800&family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0d;
+    --bg-raise:#131218;
+    --bg-card:#17161d;
+    --text:#ece7de;
+    --text-dim:#8a8590;
+    --text-faint:#4c4a54;
+    --accent:#ff2d78;
+    --accent-dim:#7a0f3d;
+    --gold:#b8944f;
+    --line:#232129;
+    --bar-h: clamp(22px, 4vw, 40px);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans JP', sans-serif;
+    font-weight:300;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent); color:#fff;}
+
+  /* ---------- letterbox frame ---------- */
+  .letterbox{
+    position:fixed; left:0; right:0; height:var(--bar-h);
+    background:#000; z-index:500;
+    display:flex; align-items:center;
+    font-family:'Barlow Condensed', sans-serif;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--text-faint);
+    pointer-events:none;
+  }
+  .letterbox.top{ top:0; justify-content:space-between; padding:0 18px; border-bottom:1px solid var(--line);}
+  .letterbox.bottom{ bottom:0; justify-content:space-between; padding:0 18px; border-top:1px solid var(--line);}
+  .letterbox .tc{ color:var(--gold); font-variant-numeric:tabular-nums; letter-spacing:.08em;}
+  .page{ padding-top:var(--bar-h); padding-bottom:var(--bar-h); }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed; top:var(--bar-h); left:0; right:0; z-index:400;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:22px clamp(20px,5vw,64px);
+    font-family:'Barlow Condensed', sans-serif;
+    letter-spacing:.08em;
+    mix-blend-mode:difference;
+  }
+  nav .mark{ font-weight:600; font-size:20px; letter-spacing:.15em; color:#fff;}
+  nav ul{ list-style:none; display:flex; gap:clamp(16px,3vw,36px); }
+  nav a{ color:#fff; text-decoration:none; font-size:14px; text-transform:uppercase; opacity:.85; transition:opacity .25s;}
+  nav a:hover{ opacity:1;}
+  @media (max-width:640px){ nav ul{ gap:14px; } nav a{ font-size:12px; } }
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:100vh;
+    display:flex; flex-direction:column; justify-content:center;
+    position:relative;
+    padding:0 clamp(20px,5vw,64px);
+    overflow:hidden;
+    background:#08070a;
+  }
+  /* real video backdrop */
+  .hero-bg{ position:absolute; inset:0; z-index:0; overflow:hidden; background:#08070a; }
+  .hero-bg .yt-wrap{
+    position:absolute; top:50%; left:50%;
+    width:100vw; height:56.25vw; /* 16:9 */
+    min-height:100vh; min-width:177.78vh; /* cover behavior */
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+  }
+  .hero-bg iframe{ width:100%; height:100%; border:0; }
+  .hero-bg .veil{
+    position:absolute; inset:0;
+    background:linear-gradient(100deg, rgba(0,0,0,.78) 0%, rgba(0,0,0,.42) 40%, rgba(0,0,0,.15) 62%, rgba(0,0,0,.62) 100%);
+  }
+  .hero-bg .grain{
+    position:absolute; inset:-40px;
+    background-image:repeating-linear-gradient(115deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px);
+    animation:flicker 6s steps(10) infinite;
+    opacity:.35;
+  }
+  @keyframes flicker{ 0%,100%{opacity:.3} 50%{opacity:.42} }
+
+  .hero-inner{ position:relative; z-index:2; }
+
+  .hero .eyebrow{
+    font-family:'Barlow Condensed', sans-serif;
+    letter-spacing:.28em; text-transform:uppercase;
+    font-size:clamp(11px,1.2vw,13px);
+    color:var(--text);
+    margin-bottom:24px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .hero .eyebrow::before{ content:""; width:30px; height:2px; background:var(--accent); display:inline-block;}
+  .hero h1{
+    font-family:'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
+    font-weight:900;
+    font-size:clamp(46px, 9vw, 108px);
+    line-height:1.08;
+    letter-spacing:.01em;
+    color:var(--text);
+  }
+  .hero h1 .pink{ color:var(--accent); }
+  .hero .sub{
+    margin-top:30px; max-width:520px;
+    font-size:clamp(14px,1.6vw,16px);
+    line-height:1.9;
+    color:var(--text-dim);
+    font-weight:300;
+  }
+  .hero-links{
+    margin-top:44px; display:flex; gap:20px; flex-wrap:wrap; align-items:center;
+  }
+  .btn{
+    font-family:'Barlow Condensed', sans-serif;
+    letter-spacing:.1em; text-transform:uppercase; font-size:14px;
+    padding:13px 26px; text-decoration:none;
+    border:1px solid var(--line); color:var(--text);
+    display:inline-flex; align-items:center; gap:10px;
+    transition:border-color .3s, background .3s, color .3s;
+  }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover{ background:#ff478d; border-color:#ff478d; }
+  .btn:not(.primary):hover{ border-color:var(--gold); color:var(--gold); }
+
+  .play-btn{
+    display:inline-flex; align-items:center; gap:14px;
+    background:none; border:none; cursor:pointer; padding:0;
+    font-family:'Barlow Condensed', sans-serif;
+    letter-spacing:.08em; text-transform:uppercase; font-size:14px;
+    color:var(--text);
+  }
+  .play-btn .disc{
+    width:52px; height:52px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.5);
+    display:flex; align-items:center; justify-content:center;
+    position:relative; flex:none;
+    transition:border-color .3s, transform .3s;
+  }
+  .play-btn .disc::before{
+    content:""; position:absolute; inset:0; border-radius:50%;
+    border:1px solid var(--accent); opacity:0; transform:scale(1);
+    animation:ring 2.6s ease-out infinite;
+  }
+  .play-btn .disc svg{ width:14px; height:14px; fill:#fff; margin-left:2px; }
+  .play-btn:hover .disc{ border-color:var(--accent); transform:scale(1.06); }
+  @keyframes ring{
+    0%{ opacity:.55; transform:scale(1); }
+    100%{ opacity:0; transform:scale(1.5); }
+  }
+
+  .hero-vertical{
+    position:absolute; right:clamp(16px,3vw,40px); top:0; bottom:0;
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index:2; pointer-events:none;
+  }
+  .hero-vertical ul{
+    list-style:none; writing-mode:vertical-rl; text-orientation:mixed;
+    display:flex; gap:26px; margin-bottom:70px;
+    font-family:'Barlow Condensed', sans-serif;
+    font-size:11px; letter-spacing:.22em; color:var(--text-faint);
+  }
+  .hero-vertical li:nth-child(2){ color:var(--accent); }
+  .hero-vertical li:nth-child(3){ color:var(--text); }
+
+  .scroll-cue{
+    position:absolute; bottom:56px; left:clamp(20px,5vw,64px); z-index:2;
+    font-family:'Barlow Condensed', sans-serif; font-size:12px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--text-faint);
+    display:flex; align-items:center; gap:10px;
+  }
+  .scroll-cue .ln{ width:1px; height:40px; background:linear-gradient(var(--text-faint), transparent); animation:pulse 2.4s ease-in-out infinite;}
+  @keyframes pulse{ 0%,100%{opacity:.3} 50%{opacity:1} }
+
+  /* showreel modal */
+  .reel-modal{
+    position:fixed; inset:0; z-index:900; background:rgba(4,4,6,.92);
+    display:none; align-items:center; justify-content:center; padding:40px;
+  }
+  .reel-modal.open{ display:flex; }
+  .reel-modal .frame{ width:min(1000px,100%); aspect-ratio:16/9; background:#000; position:relative; }
+  .reel-modal iframe, .reel-modal video{ width:100%; height:100%; border:0; display:block; }
+  .reel-modal .close{
+    position:absolute; top:-46px; right:0; background:none; border:none;
+    color:var(--text); font-family:'Barlow Condensed', sans-serif;
+    letter-spacing:.1em; text-transform:uppercase; font-size:13px; cursor:pointer;
+  }
+  @media (max-width:640px){ .hero-vertical{ display:none; } }
+
+  /* ---------- section shared ---------- */
+  section{ padding:clamp(80px,12vw,160px) clamp(20px,5vw,64px); position:relative;}
+  .section-head{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:clamp(40px,6vw,72px); border-bottom:1px solid var(--line); padding-bottom:24px; flex-wrap:wrap; gap:16px;}
+  .section-head .num{ font-family:'Barlow Condensed', sans-serif; color:var(--accent); font-size:14px; letter-spacing:.2em;}
+  .section-head h2{ font-family:'Shippori Mincho', serif; font-weight:600; font-size:clamp(28px,4vw,44px); margin-top:8px;}
+  .section-head p{ max-width:360px; color:var(--text-dim); font-size:14px; line-height:1.8;}
+
+  /* ---------- statement ---------- */
+  .statement{ background:var(--bg-raise); }
+  .statement .grid{ display:grid; grid-template-columns:1fr; gap:40px; }
+  .statement blockquote{
+    font-family:'Shippori Mincho', serif;
+    font-size:clamp(22px,3.4vw,36px);
+    line-height:1.65; font-weight:500; color:var(--text);
+    max-width:920px;
+  }
+  .statement blockquote .accent{ color:var(--accent); }
+  .statement .meta{ margin-top:36px; display:flex; gap:48px; flex-wrap:wrap; }
+  .statement .meta div{ font-family:'Barlow Condensed', sans-serif; }
+  .statement .meta .k{ font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--text-faint); margin-bottom:6px;}
+  .statement .meta .v{ font-size:16px; color:var(--gold); letter-spacing:.03em; }
+
+  /* ---------- works : award cards with real playable media ---------- */
+  .awards-grid{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:2px;
+    background:var(--line);
+  }
+  .award-card{
+    background:var(--bg-card); display:flex; flex-direction:column;
+    opacity:0; transform:translateY(20px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  .award-card.in{ opacity:1; transform:translateY(0); }
+  .award-media{
+    position:relative; border:0; padding:0; cursor:pointer; background:#000;
+    aspect-ratio:16/9; overflow:hidden; display:block; width:100%;
+  }
+  .award-media img, .award-media video{ width:100%; height:100%; object-fit:cover; display:block; opacity:.82; transition:opacity .35s, transform .5s; }
+  .award-media:hover img, .award-media:hover video{ opacity:1; transform:scale(1.04); }
+  .award-media::after{ content:""; position:absolute; inset:0; background:linear-gradient(200deg, transparent 45%, rgba(0,0,0,.5) 100%); }
+  .award-media .play-mark{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:2; }
+  .award-media .play-mark::before{
+    content:""; position:absolute; width:52px; height:52px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.55); transition:border-color .3s, transform .3s;
+  }
+  .award-media:hover .play-mark::before{ border-color:var(--accent); transform:scale(1.08); }
+  .award-media .play-mark svg{ width:14px; height:14px; fill:#fff; position:relative; margin-left:2px; }
+  .award-body{ padding:24px 26px 28px; display:flex; flex-direction:column; gap:12px; flex:1; }
+  .award-body .tag{ font-family:'Barlow Condensed', sans-serif; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); }
+  .award-body h3{ font-family:'Shippori Mincho', serif; font-size:21px; font-weight:600; line-height:1.4; }
+  .award-body h3 .jp{ font-size:16px; color:var(--text-dim); font-weight:400; }
+  .award-list{ list-style:none; display:flex; flex-direction:column; gap:5px; }
+  .award-list li{ font-family:'Barlow Condensed', sans-serif; font-size:12.5px; letter-spacing:.03em; color:var(--text); }
+  .award-list a{ color:var(--text); text-decoration:none; border-bottom:1px solid var(--line); transition:border-color .3s, color .3s; }
+  .award-list a:hover{ color:var(--accent); border-color:var(--accent); }
+  .award-body p{ font-size:13px; line-height:1.85; color:var(--text-dim); margin-top:auto; }
+
+  /* ---------- video grid : uniform 16:9, clear thumbnails ---------- */
+  .video-grid{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
+    gap:16px;
+  }
+  .video-card{
+    position:relative; border:0; padding:0; cursor:pointer; background:#000;
+    overflow:hidden; display:block; aspect-ratio:16/9;
+  }
+  .video-card img{ width:100%; height:100%; object-fit:cover; display:block; opacity:.85; transition:opacity .4s, transform .6s ease; }
+  .video-card:hover img{ opacity:1; transform:scale(1.05); }
+  .video-card::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(200deg, transparent 45%, rgba(0,0,0,.5) 100%);
+  }
+  .video-card .play-mark{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:2;
+  }
+  .video-card .play-mark::before{
+    content:""; position:absolute; width:52px; height:52px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.6); transition:border-color .3s, transform .3s;
+    backdrop-filter:blur(2px);
+  }
+  .video-card:hover .play-mark::before{ border-color:var(--accent); transform:scale(1.1); }
+  .video-card .caption{
+    position:absolute; left:0; right:0; bottom:0; z-index:2;
+    padding:14px 16px; text-align:left;
+  }
+  .video-card .caption .ttl{
+    font-family:'Shippori Mincho', serif; font-size:13.5px; color:#fff;
+    line-height:1.4; margin-bottom:5px; display:block;
+  }
+  .video-card .caption .badge{
+    font-family:'Barlow Condensed', sans-serif; font-size:10.5px; letter-spacing:.08em;
+    color:var(--gold); text-transform:uppercase;
+  }
+  .video-card .play-mark svg{ width:15px; height:15px; fill:#fff; position:relative; margin-left:2px; }
+
+  /* ---------- awards history ---------- */
+  .awards-history{ background:var(--bg-raise); }
+  .awards-title{
+    text-align:center; font-family:'Barlow Condensed', sans-serif; font-weight:700;
+    text-transform:uppercase; letter-spacing:.1em;
+    font-size:clamp(32px,6vw,56px); color:var(--text);
+    margin-bottom:clamp(50px,8vw,88px);
+  }
+  .awards-columns{
+    display:grid; grid-template-columns:1fr 1fr; gap:clamp(36px,6vw,80px);
+    max-width:1000px; margin:0 auto;
+  }
+  .awards-block{ margin-bottom:clamp(32px,5vw,52px); }
+  .awards-block:last-child{ margin-bottom:0; }
+  .awards-block h3{
+    font-family:'Barlow Condensed', sans-serif; font-weight:600;
+    font-size:clamp(19px,2.4vw,24px); letter-spacing:.03em; color:var(--text);
+    margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--line);
+  }
+  .awards-block ul{ list-style:none; display:flex; flex-direction:column; gap:11px; }
+  .awards-block li{
+    font-size:13.5px; line-height:1.75; color:var(--text-dim);
+    padding-left:18px; position:relative;
+  }
+  .awards-block li::before{
+    content:""; position:absolute; left:0; top:7px;
+    width:5px; height:5px; border-radius:50%; background:var(--accent);
+  }
+  @media (max-width:720px){ .awards-columns{ grid-template-columns:1fr; } }
+
+  /* ---------- process ---------- */
+  .process{ background:var(--bg-raise); }
+  .process-list{ display:flex; flex-direction:column; }
+  .process-item{
+    display:grid; grid-template-columns:80px 1fr; gap:24px;
+    padding:26px 0; border-bottom:1px solid var(--line);
+    align-items:baseline;
+  }
+  .process-item:first-child{ border-top:1px solid var(--line); }
+  .process-item .no{ font-family:'Barlow Condensed', sans-serif; color:var(--accent); font-size:15px; }
+  .process-item h4{ font-family:'Shippori Mincho', serif; font-size:19px; font-weight:600; margin-bottom:6px;}
+  .process-item p{ color:var(--text-dim); font-size:14px; line-height:1.85; max-width:640px;}
+
+  /* ---------- contact ---------- */
+  .contact{
+    text-align:center;
+    position:relative;
+    padding-top:clamp(90px,14vw,170px);
+    padding-bottom:clamp(90px,14vw,170px);
+  }
+  .contact .eyebrow-line{
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    margin-bottom:20px;
+  }
+  .contact .eyebrow-line span{
+    font-family:'Barlow Condensed', sans-serif; font-size:12px; letter-spacing:.3em;
+    text-transform:uppercase; color:var(--text-faint);
+  }
+  .contact .eyebrow-line::before, .contact .eyebrow-line::after{
+    content:""; width:34px; height:1px; background:var(--line);
+  }
+  .contact h2{
+    font-family:'Barlow Condensed', sans-serif; font-weight:700;
+    text-transform:uppercase;
+    font-size:clamp(38px,7.5vw,84px); line-height:1.05; letter-spacing:.01em;
+    margin-bottom:26px;
+  }
+  .contact h2 .pink{ color:var(--accent); }
+  .contact p.lead{
+    color:var(--text-dim); max-width:520px; margin:0 auto 52px;
+    line-height:1.9; font-size:14.5px;
+    font-family:'Barlow Condensed', sans-serif; letter-spacing:.02em;
+  }
+  .icon-row{
+    display:flex; align-items:center; justify-content:center;
+    gap:clamp(20px,4vw,40px); flex-wrap:wrap;
+  }
+  .icon-row a, .icon-row .icon-disabled{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    color:var(--text); text-decoration:none;
+    opacity:.85; transition:opacity .3s, transform .3s;
+  }
+  .icon-row a:hover{ opacity:1; transform:translateY(-3px); color:var(--accent); }
+  .icon-row svg{ width:30px; height:30px; fill:currentColor; }
+  .icon-row .icon-disabled{ opacity:.28; cursor:default; }
+  .icon-row .icon-label{ font-family:'Barlow Condensed', sans-serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase; }
+
+  footer{
+    padding:28px clamp(20px,5vw,64px);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    font-family:'Barlow Condensed', sans-serif; font-size:11px; letter-spacing:.1em;
+    color:var(--text-faint); border-top:1px solid var(--line);
+    text-transform:uppercase;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .scroll-cue .ln{ animation:none; }
+    .award-card{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="letterbox top">
+    <span>AICO / AI × ANIME</span>
+    <span class="tc" id="tc-top">00:00:00:00</span>
+  </div>
+  <div class="letterbox bottom">
+    <span>DIRECTOR — CINEMATOGRAPHER</span>
+    <span>REEL 01 / MMXXVI</span>
+  </div>
+
+  <nav>
+    <div class="mark">AICO</div>
+    <ul>
+      <li><a href="#statement">Statement</a></li>
+      <li><a href="#videos">Videos</a></li>
+      <li><a href="#works">Works</a></li>
+      <li><a href="#awards">Awards</a></li>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <div class="page">
+
+    <section class="hero">
+      <div class="hero-bg">
+        <div class="yt-wrap">
+          <iframe id="hero-bg-video"
+            src="https://www.youtube.com/embed/sz24kob77Ms?autoplay=1&mute=1&loop=1&playlist=sz24kob77Ms&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&disablekb=1"
+            allow="autoplay; encrypted-media" title="AICO background reel"></iframe>
+        </div>
+        <div class="veil"></div>
+        <div class="grain"></div>
+      </div>
+
+      <div class="hero-vertical">
+        <ul>
+          <li>STORY</li>
+          <li>VISUAL</li>
+          <li>GENERATIVE AI</li>
+        </ul>
+      </div>
+
+      <div class="hero-inner">
+        <div class="eyebrow">AI ANIMATION CREATOR · JAPAN</div>
+        <h1>AIで創る<br><span class="pink">心に響く</span><br>アニメを</h1>
+        <p class="sub">物語設計から映像演出、編集まで。感情に残るAIアニメーションを制作します。</p>
+        <div class="hero-links">
+          <a class="btn primary" href="https://www.youtube.com/@ai_anime_AICO" target="_blank" rel="noopener">Watch on YouTube</a>
+          <button class="play-btn" id="reel-open" type="button">
+            <span class="disc"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+            SHOWREELを再生
+          </button>
+        </div>
+      </div>
+
+      <div class="scroll-cue"><span class="ln"></span>SCROLL</div>
+    </section>
+
+    <div class="reel-modal" id="reel-modal">
+      <div class="frame">
+        <button class="close" id="reel-close">CLOSE ✕</button>
+        <iframe id="reel-iframe" src="" title="AICO Showreel" allow="autoplay; encrypted-media" allowfullscreen style="display:none;"></iframe>
+        <video id="reel-video" src="" controls playsinline style="display:none;"></video>
+      </div>
+    </div>
+
+    <section class="statement" id="statement">
+      <div class="section-head">
+        <div>
+          <div class="num">01 — STATEMENT</div>
+          <h2>制作について</h2>
+        </div>
+        <p>2024年よりAI動画制作を開始。急速に進化する生成AIと向き合いながら、その可能性を探求し続けています。</p>
+      </div>
+      <div class="grid">
+        <blockquote>単なる映像表現ではなく、<span class="accent">見る人の記憶や感情に残る体験</span>を作ること。AI×ANIMEを軸に、感情に響くストーリー設計と映像演出を融合させています。</blockquote>
+        <div class="meta">
+          <div><div class="k">Focus</div><div class="v">Direction / Cinematography</div></div>
+          <div><div class="k">Tools</div><div class="v">Seedance · Midjourney · Suno</div></div>
+          <div><div class="k">Since</div><div class="v">2024</div></div>
+          <div><div class="k">Base</div><div class="v">Japan</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="videos">
+      <div class="section-head">
+        <div>
+          <div class="num">02 — VIDEOS</div>
+          <h2>Showreel Clips</h2>
+        </div>
+        <p>YouTubeチャンネル(@ai_anime_AICO)で公開中の作品からピックアップ。サムネイルをクリックすると再生します。</p>
+      </div>
+      <div class="video-grid" id="video-grid">
+        <button class="video-card" data-id="sz24kob77Ms" type="button">
+          <img src="https://img.youtube.com/vi/sz24kob77Ms/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/sz24kob77Ms/hqdefault.jpg';" alt="AICO video clip 1" loading="lazy">
+          <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        </button>
+        <button class="video-card" data-id="SpkhJHE39X0" type="button">
+          <img src="https://img.youtube.com/vi/SpkhJHE39X0/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/SpkhJHE39X0/hqdefault.jpg';" alt="AICO video clip 2" loading="lazy">
+          <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        </button>
+        <button class="video-card" data-id="5lQveOvMK58" type="button">
+          <img src="https://img.youtube.com/vi/5lQveOvMK58/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/5lQveOvMK58/hqdefault.jpg';" alt="AICO video clip 3" loading="lazy">
+          <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        </button>
+        <button class="video-card" data-id="GFlXmtO8fdo" type="button">
+          <img src="https://img.youtube.com/vi/GFlXmtO8fdo/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/GFlXmtO8fdo/hqdefault.jpg';" alt="AICO video clip 4" loading="lazy">
+          <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        </button>
+        <button class="video-card" data-id="M57Npr_CZPs" type="button">
+          <img src="https://img.youtube.com/vi/M57Npr_CZPs/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/M57Npr_CZPs/hqdefault.jpg';" alt="AICO video clip 6" loading="lazy">
+          <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        </button>
+        <button class="video-card" data-id="3lzOAp7yBGw" type="button">
+          <img src="https://img.youtube.com/vi/3lzOAp7yBGw/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/3lzOAp7yBGw/hqdefault.jpg';" alt="AICO video clip 7" loading="lazy">
+          <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        </button>
+        <button class="video-card" data-id="qctohqSj3hY" type="button">
+          <img src="https://img.youtube.com/vi/qctohqSj3hY/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/qctohqSj3hY/hqdefault.jpg';" alt="AICO video clip 8" loading="lazy">
+          <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        </button>
+        <button class="video-card" data-id="7ymMdCcXnjM" type="button">
+          <img src="https://img.youtube.com/vi/7ymMdCcXnjM/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/7ymMdCcXnjM/hqdefault.jpg';" alt="AICO video clip 9" loading="lazy">
+          <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        </button>
+      </div>
+    </section>
+
+    <section id="works">
+      <div class="section-head">
+        <div>
+          <div class="num">03 — SELECTED WORKS</div>
+          <h2>Selected Works</h2>
+        </div>
+        <p>受賞・選出された作品から。クリックすると映像が再生されます。</p>
+      </div>
+      <div class="awards-grid" id="awards-grid">
+
+        <article class="award-card">
+          <button class="award-media" data-type="yt" data-id="iWLeylAbLgI" type="button" aria-label="Ninja of Feverを再生">
+            <img src="https://img.youtube.com/vi/iWLeylAbLgI/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/iWLeylAbLgI/hqdefault.jpg';" alt="Ninja of Fever -熱忍者-" loading="lazy">
+            <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+          </button>
+          <div class="award-body">
+            <span class="tag">Team Production · Assistant</span>
+            <h3>Ninja of Fever <span class="jp">-熱忍者-</span></h3>
+            <ul class="award-list">
+              <li><a href="https://www.filmawards.ai" target="_blank" rel="noopener">AI Film Awards Cannes 2026</a></li>
+              <li><a href="https://x.com/newfilmmakersny" target="_blank" rel="noopener">NewFilmmakers NY</a></li>
+            </ul>
+            <p>チーム制作による入賞作品。アシスタントとして参加。</p>
+          </div>
+        </article>
+
+        <article class="award-card">
+          <button class="award-media" data-type="yt" data-id="PqDHkzp3QYo" type="button" aria-label="MOCO'sRESTAURANTを再生">
+            <img src="https://img.youtube.com/vi/PqDHkzp3QYo/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/PqDHkzp3QYo/hqdefault.jpg';" alt="MOCO's RESTAURANT" loading="lazy">
+            <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+          </button>
+          <div class="award-body">
+            <span class="tag">AOI Pro. Award</span>
+            <h3>MOCO's RESTAURANT</h3>
+            <ul class="award-list">
+              <li>AOI Pro. 優秀賞 受賞</li>
+            </ul>
+            <p>AOI Proのコンペティションにて優秀賞を受賞した作品。</p>
+          </div>
+        </article>
+
+        <article class="award-card">
+          <button class="award-media" data-type="yt" data-id="7KFCqpCxeos" type="button" aria-label="SOZO美術館作品を再生">
+            <img src="https://img.youtube.com/vi/7KFCqpCxeos/hqdefault.jpg" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/7KFCqpCxeos/mqdefault.jpg';" alt="行ってみたい白浜" loading="lazy">
+            <span class="play-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+          </button>
+          <div class="award-body">
+            <span class="tag">SOZO美術館 1位</span>
+            <h3>行ってみたい白浜</h3>
+            <ul class="award-list">
+              <li>SOZO美術館 コンペティション 1位受賞</li>
+            </ul>
+            <p>和歌山県白浜町を紹介する作品。</p>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="awards-history" id="awards">
+      <div class="awards-title">AWARDS</div>
+      <div class="awards-columns">
+        <div class="col">
+          <div class="awards-block">
+            <h3>2024年</h3>
+            <ul>
+              <li>12月 奈良県家族部門 ストーリー賞</li>
+              <li>10月 SOZO美術館 メトロアドエラ大阪万博 準グランプリ</li>
+              <li>9月 AOI Pro 技術部門 優秀賞</li>
+              <li>6月 SOZO美術館『琥珀』天丼キャラコンペ 入賞</li>
+            </ul>
+          </div>
+          <div class="awards-block">
+            <h3>2026年</h3>
+            <ul>
+              <li>OiiOiiアニメ受賞 5月渋谷愛ビジョンで作品上映</li>
+            </ul>
+          </div>
+          <div class="awards-block">
+            <h3>INSTAGRAM</h3>
+            <ul>
+              <li>人類滅亡の日あいつらが帰ってきたInstagram　34万回再生</li>
+            </ul>
+          </div>
+        </div>
+        <div class="col">
+          <div class="awards-block">
+            <h3>2025年</h3>
+            <ul>
+              <li>12月 SOZO美術館 和歌山県白浜町 1位受賞</li>
+              <li>10月 DOMO AI ＆SEIIIRU杯　入賞</li>
+              <li>9月 SOZO美術館ミニコンペ　入賞</li>
+              <li>8月 FlexClip×内藤食品工業CM　最優秀賞</li>
+            </ul>
+          </div>
+          <div class="awards-block">
+            <h3>委託業務実績</h3>
+            <ul>
+              <li>日本テレビ様　チームによるYouTube製作</li>
+              <li>クライアント、クラウドワークス　案件多数</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="process" id="process">
+      <div class="section-head">
+        <div>
+          <div class="num">05 — PROCESS</div>
+          <h2>制作フロー</h2>
+        </div>
+        <p>企画からリリースまで、一人の監督として全工程に関わっています。</p>
+      </div>
+      <div class="process-list">
+        <div class="process-item"><div class="no">01</div><div><h4>世界観・キャラクター設計</h4><p>物語の軸となるオリジナルキャラクターと世界観を構築。ビジュアル方向性を定義します。</p></div></div>
+        <div class="process-item"><div class="no">02</div><div><h4>脚本・絵コンテ</h4><p>セリフとカット割りを設計し、テンポと感情の起伏を絵コンテに落とし込みます。</p></div></div>
+        <div class="process-item"><div class="no">03</div><div><h4>生成・演出</h4><p>Seedance / Midjourneyなどの生成AIを用い、狙った画づくりとカメラワークを追求します。</p></div></div>
+        <div class="process-item"><div class="no">04</div><div><h4>音楽・仕上げ</h4><p>Sunoによるオリジナル劇伴とTTSでの音声演出を加え、映像として完成させます。</p></div></div>
+        <div class="process-item"><div class="no">05</div><div><h4>配信・分析</h4><p>YouTube / Instagramでの公開後、データを分析し次回作の企画へフィードバックします。</p></div></div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="eyebrow-line"><span>Get In Touch</span></div>
+      <h2>CONTACT<br><span class="pink">INFORMATION</span></h2>
+      <p class="lead">動画の制作・コラボレーション依頼などは<br>メール又は各SNSのDMよりご連絡ください</p>
+      <div class="icon-row">
+        <a href="https://x.com/AICO_fly" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.6 8.7L23.3 22H16.6l-5.2-6.8L5.4 22H2.3l8.1-9.3L1.4 2h6.9l4.7 6.2L18.9 2Zm-1.2 18h1.9L7.4 4h-2l12.3 16Z"/></svg>
+          <span class="icon-label">X</span>
+        </a>
+        <a href="https://www.youtube.com/@ai_anime_AICO" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.4 3.5 12 3.5 12 3.5s-7.4 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c2 .6 9.4.6 9.4.6s7.4 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.5V8.5L15.8 12l-6.2 3.5Z"/></svg>
+          <span class="icon-label">YouTube</span>
+        </a>
+        <a href="https://www.instagram.com/aico_fly/" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M12 2c2.7 0 3.1 0 4.1.06 1.1.05 1.8.2 2.4.45.7.26 1.2.6 1.7 1.1.5.5.86 1 1.1 1.7.25.6.4 1.3.45 2.4.06 1 .06 1.4.06 4.1s0 3.1-.06 4.1c-.05 1.1-.2 1.8-.45 2.4-.26.7-.6 1.2-1.1 1.7-.5.5-1 .86-1.7 1.1-.6.25-1.3.4-2.4.45-1 .06-1.4.06-4.1.06s-3.1 0-4.1-.06c-1.1-.05-1.8-.2-2.4-.45-.7-.26-1.2-.6-1.7-1.1-.5-.5-.86-1-1.1-1.7-.25-.6-.4-1.3-.45-2.4C2 15.1 2 14.7 2 12s0-3.1.06-4.1c.05-1.1.2-1.8.45-2.4.26-.7.6-1.2 1.1-1.7.5-.5 1-.86 1.7-1.1.6-.25 1.3-.4 2.4-.45C8.9 2 9.3 2 12 2Zm0 1.8c-2.6 0-3 0-4 .06-.95.04-1.46.2-1.8.33-.46.18-.78.4-1.12.74-.34.34-.55.66-.74 1.12-.13.34-.29.85-.33 1.8-.05 1-.06 1.4-.06 4s0 3 .06 4c.04.95.2 1.46.33 1.8.18.46.4.78.74 1.12.34.34.66.55 1.12.74.34.13.85.29 1.8.33 1 .05 1.4.06 4 .06s3 0 4-.06c.95-.04 1.46-.2 1.8-.33.46-.18.78-.4 1.12-.74.34-.34.55-.66.74-1.12.13-.34.29-.85.33-1.8.05-1 .06-1.4.06-4s0-3-.06-4c-.04-.95-.2-1.46-.33-1.8a3 3 0 0 0-.74-1.12 3 3 0 0 0-1.12-.74c-.34-.13-.85-.29-1.8-.33-1-.05-1.4-.06-4-.06Zm0 3.5a4.7 4.7 0 1 1 0 9.4 4.7 4.7 0 0 1 0-9.4Zm0 1.8a2.9 2.9 0 1 0 0 5.8 2.9 2.9 0 0 0 0-5.8Zm5-2a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0Z"/></svg>
+          <span class="icon-label">Instagram</span>
+        </a>
+        <a href="mailto:aicoaico001@gmail.com">
+          <svg viewBox="0 0 24 24"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h17A1.5 1.5 0 0 1 22 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-13Zm2.2.5 7.8 6.3L19.8 6H4.2ZM20 8.1l-7.4 6-.6.4-.6-.4L4 8.1v10.4h16V8.1Z"/></svg>
+          <span class="icon-label">Mail</span>
+        </a>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <span>© 2026 AICO — AI Anime Direction</span>
+    <span>Built &amp; deployed via GitHub Pages</span>
+  </footer>
+
+<script>
+  // timecode counter driven by scroll position
+  const tc = document.getElementById('tc-top');
+  function fmt(n){ return String(n).padStart(2,'0'); }
+  function updateTC(){
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = total > 0 ? scrolled/total : 0;
+    const totalFrames = Math.floor(pct * (60*24)); // pretend 60s * 24fps timeline
+    const h = fmt(Math.floor(totalFrames/(3600*24))%24? 0:0);
+    const s = Math.floor(pct*60);
+    const f = Math.floor((pct*60*24)%24);
+    tc.textContent = `00:${fmt(Math.floor(s/60))}:${fmt(s%60)}:${fmt(f)}`;
+  }
+  document.addEventListener('scroll', updateTC, {passive:true});
+  updateTC();
+
+  // showreel modal — opens a YouTube id (with sound) or a local video file
+  const reelModal = document.getElementById('reel-modal');
+  const reelIframe = document.getElementById('reel-iframe');
+  const reelVideo = document.getElementById('reel-video');
+  function openReel(type, value){
+    if(type === 'local'){
+      reelVideo.src = value; reelVideo.style.display = 'block'; reelVideo.play();
+      reelIframe.style.display = 'none'; reelIframe.src = '';
+    } else {
+      reelIframe.src = `https://www.youtube.com/embed/${value}?autoplay=1&rel=0`;
+      reelIframe.style.display = 'block';
+      reelVideo.style.display = 'none'; reelVideo.pause(); reelVideo.src = '';
+    }
+    reelModal.classList.add('open');
+  }
+  function closeReel(){
+    reelModal.classList.remove('open');
+    reelIframe.src = ''; reelVideo.pause(); reelVideo.src = '';
+  }
+  document.getElementById('reel-open').addEventListener('click', ()=> openReel('yt','sz24kob77Ms'));
+  document.getElementById('reel-close').addEventListener('click', closeReel);
+  reelModal.addEventListener('click', (e)=>{ if(e.target === reelModal) closeReel(); });
+  document.querySelectorAll('.video-card').forEach(card=>{
+    card.addEventListener('click', ()=> openReel('yt', card.dataset.id));
+  });
+  document.querySelectorAll('.award-media').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const type = card.dataset.type;
+      openReel(type, type === 'local' ? card.dataset.src : card.dataset.id);
+    });
+  });
+  // autoplay the muted preview loops inside award cards where present
+  document.querySelectorAll('.award-media video').forEach(v=>{ v.play().catch(()=>{}); });
+
+  // reveal cards on scroll
+  const cards = document.querySelectorAll('.award-card');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  }, {threshold:.15});
+  cards.forEach(c=>io.observe(c));
+</script>
+
+</body>
+</html>
